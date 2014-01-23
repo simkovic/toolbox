@@ -3,7 +3,7 @@ import pylab as plt
 plt.ion()
 plt.close('all')
 np.random.seed(3)
-T=100
+T=20
 D=np.zeros((T,5,3))*np.nan
 for t in range(T):
     for i in range(3):
@@ -15,12 +15,11 @@ rule=np.zeros(T,dtype=int)
 for i in range(T/10):
     a=rule[i*T/10-1]
     while a==rule[i*T/10-1]: a=np.random.randint(3)
-    rule[i*T/10:(i+1)*T/10]=a
+    rule[i*10:(i+1)*10]=a
 # identify target
 target=np.zeros(T,dtype=int)   
 for i in range(T):
     target[i]= np.nonzero(D[i,-1,rule[i]]==D[i,:-1,rule[i]])[0][0]
-
 
 def sampleModel(D,target,r=0.5,q=0.5,d=1,f=1,B=None):    
     a=np.zeros((T+1,3))*np.nan
@@ -42,15 +41,18 @@ def sampleModel(D,target,r=0.5,q=0.5,d=1,f=1,B=None):
         else: LL+=np.log(max(p[t,choice[t]],0.0001))
         cor[t]=target[t]==choice[t]
         m[t,:]= D[t,-1,:]==D[t,choice[t],:]
+        #if m[t,:].sum()==0: print 'mproblem',r,q,d,f
         if cor[t]:
             s[t,:]=m[t,:]*np.power(a[t,:],f)
+            #if s[t,:].sum()==0: print 'divzero1',r,q,d,f
             s[t,:]/= s[t,:].sum()
             a[t+1,:]= (1-r)*a[t,:]+r*s[t,:]
         else:
             s[t,:]=(1-m[t,:])*np.power(a[t,:],f)
+            #if s[t,:].sum()==0: print 'divzero2',r,q,d,f
             s[t,:]/= s[t,:].sum()
             a[t+1,:]= (1-q)*a[t,:]+q*s[t,:]
-        if np.any(a[t+1,:]==1):
+        if np.any(a[t+1,:]==1):# perturb to avoid extreme values
             a[t+1,:]+= 0.0001
             a[t+1,:]/= 1.0003
     if B is None: return choice
@@ -82,6 +84,6 @@ for rr in r.tolist():
                             q=qq,d=dd,f=ff,B=B[k,:])
                 out[-1][-1][-1].append(LL)
 print time.time()-t0
-np.save('out',out)
+np.save('out2',out)
 
 
