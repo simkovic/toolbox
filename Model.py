@@ -13,7 +13,7 @@ a2data=np.array([[0,1,2,2,1,0,2,1,0,np.nan],
 data2a=np.zeros((3,D,3))
 for i in range(3):
     data2a[i,:,:] = np.int32(a2data==i).T
-    
+bla 
 feedback=np.array([[1,0,0,0,0,1,0,0,1,np.nan],
     [0,0,1,0,0,1,0,0,1,np.nan],[np.nan,np.nan,np.nan,0,0,1,0,0,0,1]])
 w=np.array([1,1,1,0.5,0.5,0.5,0.5,0.5,0.5,0.5])
@@ -28,7 +28,7 @@ def chooseAction(p):
     return action.nonzero()[0][0]
 
 class Model():
-    def __init__(self,q0=0.5,u0=0.5,d=1,g=0.5,h=0.5,m=1):
+    def __init__(self,q0=0.5,u0=0.5,d=1,g=0.7,h=0.5,m=1):
         ''' q0 - prior preference of color over length (0,1)
             u0 - prior preference of rel. over abs. length (0,1)
             d - decision consistency (0,inf)
@@ -160,39 +160,43 @@ for i in range(n):
 #M.plothistory()
 h= np.linspace(0,1,21)#np.array([1])
 g= np.linspace(0,1,21)
-m=np.linspace(0,1,21)
-d=np.linspace(0,1,21)
-##import time
-##t0=time.time()
-##out=[]
-##for hh in h.tolist():
-##    print hh
-##    out.append([])
-##    for gg in g.tolist():
-##        out[-1].append([])
-##        for mm in m.tolist():
-##            out[-1][-1].append([])
-##            for dd in d.tolist():
-##                M.h=hh
-##                M.g=gg
-##                M.m=mm
-##                M.d=dd
-##                out[-1][-1][-1].append(LLsample(M,Y))
-##print time.time()-t0
-##np.save('out',out)
-#plt.plot(g,out[-1])
-#plt.pcolormesh(h,g,np.array(out))
-out=np.load('out.npy')
-for mm in range(m.size/2):
-    for dd in range(d.size/2):
-        plt.subplot(10,10,(9-mm)*10+dd+1)
-        plt.pcolormesh(h,g,out[:,:,mm*2,dd*2],cmap='winter',vmax=-6000,vmin=-7000)
-        plt.gca().set_xticks([])
-        plt.gca().set_yticks([])
-        if dd==0:
-            print mm,dd
-            plt.ylabel('%.1f'%m[mm*2])
-        if mm==0: plt.xlabel('%.1f'%d[dd*2])
+m=np.linspace(0,2,21)
+d=np.linspace(0,2,21)
+import time
+t0=time.time()
+out=[]
+for hh in h.tolist():
+    print hh
+    out.append([])
+    for gg in g.tolist():
+        out[-1].append([])
+        for mm in m.tolist():
+            out[-1][-1].append([])
+            for dd in d.tolist():
+                M.h=hh
+                M.g=gg
+                M.m=mm
+                M.d=dd
+                out[-1][-1][-1].append(LLsample(M,Y))
+print time.time()-t0
+np.save('out5',out)
+
+def plotLL(fname='out4.npy'):
+    h= np.linspace(0,1,21)
+    g= np.linspace(0,1,21)
+    m=np.linspace(0,2,21)
+    d=np.linspace(0,2,21)
+    out=np.load('out4.npy')
+    for mm in range(m.size/2):
+        for dd in range(d.size/2):
+            plt.subplot(10,10,(9-mm)*10+dd+1)
+            plt.pcolormesh(h,g,out[:,:,mm*2,dd*2],cmap='winter',vmax=0,vmin=-500)
+            plt.gca().set_xticks([])
+            plt.gca().set_yticks([])
+            if dd==0:
+                print mm,dd
+                plt.ylabel('%.1f'%m[mm*2])
+            if mm==0: plt.xlabel('%.1f'%d[dd*2])
         
 
 
