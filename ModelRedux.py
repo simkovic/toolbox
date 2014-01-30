@@ -32,9 +32,9 @@ class Model():
         ''' q0 - prior preference of color over length (0,1)
             u0 - prior preference of rel. over abs. length (0,1)
             d - decision consistency (0,inf), 0=random, 1=deterministic
-            g - learning from positive feedback (0,1);
+            h - learning from positive feedback (0,1);
                 1=current evidence (fast shifting), 0= prior(slow shifing)
-            h - learning from negative feedback (0,1)
+            g - learning from negative feedback (0,1);
             m - attentional focus (0, inf); 0= uniform distribution
         '''
         self.q0=q0; self.u0=u0; self.d=d
@@ -66,10 +66,11 @@ class Model():
             self.f.append(f)
             if f==1:
                 s=m*w
-                a[t+1,:]= self.g*s/np.nansum(s) + (1-self.g)*a[t,:]
+                a[t+1,:]= self.h*s/np.nansum(s) + (1-self.h)*a[t,:]
             else:
                 s=(1-m)*w
-                a[t+1,:]= self.h*s/np.nansum(s) + (1-self.h)*a[t,:]
+                a[t+1,:]= self.g*s/np.nansum(s) + (1-self.g)*a[t,:]
+
             u[t+1]= np.nansum(a[t+1,3:6])/np.nansum(a[t+1,3:])
             q[t+1]= np.nansum(a[t+1,:3])/np.nansum(a[t+1,:])
             #(np.nansum(a[t+1,:3])+(1-u[t+1])*np.nansum(a[t+1,6:])+u[t+1]*np.nansum(a[t+1,3:6])
@@ -104,10 +105,10 @@ class Model():
             loglik= np.nansum(np.log(np.maximum(0.001,p[t,m==f[t]])))
             if f[t]==1:
                 s=m*w
-                a[t+1,:]= self.g*s/np.nansum(s) + (1-self.g)*a[t,:]
+                a[t+1,:]= self.h*s/np.nansum(s) + (1-self.h)*a[t,:]
             else:
                 s=(1-m)*w
-                a[t+1,:]= self.h*s/np.nansum(s) + (1-self.h)*a[t,:]
+                a[t+1,:]= self.g*s/np.nansum(s) + (1-self.g)*a[t,:]
             #print t,dat[t],f[t],np.nansum(p[t,m==f[t]]),loglik
             #print 'm= ',m
             #print 'p= ',p
@@ -151,31 +152,30 @@ def LLsample(M,Y):
 
 def checkLL(M,n=50):        
     np.random.seed(4)
-    fname='LLq%.2fu%.2fh%.2fg%.2fm%.2fd%.2f'%(M.q0,M.u0,M.h,M.g,M.m,M.d)
+    fname='LLRq%.2fu%.2fh%.2fm%.2fd%.2f'%(M.q0,M.u0,M.h,M.m,M.d)
     
     Y=[]
     for i in range(n):
         dat,f=M.exp1run()
         Y.append([dat,f])
-    return Y
+    #return np.array(Y)
     #M.plothistory()
     h= np.linspace(0,1,21)#np.array([1])
-    g= np.linspace(0,1,21)
-    m=np.linspace(0,2,21)
-    d=np.linspace(0,2,21)
+    #g= np.linspace(0,1,21)
+    g=np.linspace(0,1,21)
     import time
     t0=time.time()
-    out=np.ones((h.size,g.size,m.size,d.size))
+    out=np.ones((h.size,g.size))
     for hh in range(h.size):
         print np.round(hh/float(h.size),2)
+        #for gg in range(g.size):
         for gg in range(g.size):
-            for mm in range(m.size):
-                for dd in range(d.size):
-                    M.h=h[hh];M.g=g[gg]
-                    M.m=m[mm];M.d=d[dd]
-                    out[hh,gg,mm,dd]=LLsample(M,Y)
+            M.h=h[hh];#M.g=g[gg]
+            M.g=g[gg]
+            out[hh,gg]=LLsample(M,Y)
     print time.time()-t0
     np.save(fname,out)
+    return out
 
 def plotLL(fname='out4.npy'):
     plt.figure()
@@ -205,13 +205,8 @@ def plotLL(fname='out4.npy'):
     plt.title(fname[:6])
         
 if __name__ == '__main__':
-##    ags=[]
-##    for i in range(1,len(sys.argv)): ags.append(float(sys.argv[i]))
-##    M=Model(q0=ags[0],u0=ags[1],h=ags[2],
-##            g=ags[3],m=ags[4],d=ags[5])
-##    checkLL(M)
-    Y=checkLL(Model())
-    plotLL(fname='LLq0.20u0.50h0.50g0.50m1.00d1.00.npy')
-    plotLL(fname='LLq0.50u0.50h0.50g0.50m1.00d1.00.npy')
-    plotLL(fname='LLq0.80u0.50h0.50g0.50m1.00d1.00.npy')
-    
+    ags=[]
+    #for i in range(1,len(sys.argv)): ags.append(float(sys.argv[i]))
+    np.random.seed(5)
+    M=Model(q0=0.9,u0=1,h=0.9,g=0.5,m=1,d=1)
+    out=checkLL(M)
